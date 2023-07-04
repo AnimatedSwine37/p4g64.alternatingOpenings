@@ -6,6 +6,7 @@ using Reloaded.Hooks.ReloadedII.Interfaces;
 using Reloaded.Memory;
 using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;
+using Reloaded.Mod.Interfaces.Internal;
 using System.Diagnostics;
 using IReloadedHooks = Reloaded.Hooks.ReloadedII.Interfaces.IReloadedHooks;
 
@@ -65,11 +66,17 @@ public unsafe class Mod : ModBase // <= Do not Remove.
 
         Utils.LogDebug($"Allocated introAPlayed to 0x{(nuint)_introAPlayed:X}");
 
-        if (_configuration.RandomiseInitial)
+        if (_modLoader.GetActiveMods().Any(x => x.Generic.ModId == "p4gpc.p4openingmovie"))
+        {
+            *_introAPlayed = true;
+            Utils.Log("P4 Opening Movie mod detected, forcing P4 Opening first.");
+        }
+        else if (_configuration.RandomiseInitial)
             *_introAPlayed = new Random().Next(0, 2) == 1;
         else
             *_introAPlayed = _configuration.P4OpeningFirst;
 
+        _modLoader.ModLoading += OnModLoading;
 
         var startupScannerController = _modLoader.GetController<IStartupScanner>();
         if (startupScannerController == null || !startupScannerController.TryGetTarget(out var startupScanner))
@@ -90,6 +97,7 @@ public unsafe class Mod : ModBase // <= Do not Remove.
             string[] function =
             {
                 "use64",
+                "mov edx, 43", // Set default to P4G (In case of P4 Opening Mod which changes this)
                 $"cmp byte [qword {(nuint)_introAPlayed}], 0",
                 "je endHook",
                 "mov edx, 21", // Play P4 opening
@@ -99,6 +107,15 @@ public unsafe class Mod : ModBase // <= Do not Remove.
             _openingHook = _hooks.CreateAsmHook(function, result.Offset + Utils.BaseAddress, AsmHookBehaviour.ExecuteFirst).Activate();
         });
 
+    }
+
+    private void OnModLoading(IModV1 mod, IModConfigV1 modConfig)
+    {
+        if (modConfig.ModId == "p4gpc.p4openingmovie")
+        {
+            *_introAPlayed = true;
+            Utils.Log("P4 Opening Movie mod detected, forcing P4 Opening first.");
+        }
     }
 
     #region Standard Overrides
