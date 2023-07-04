@@ -2,7 +2,7 @@
   "ModId": "p4g64.alternatingOpenings",
   "ModName": "Alternating Openings",
   "ModAuthor": "AnimatedSwine37",
-  "ModVersion": "1.0.0",
+  "ModVersion": "1.0.1",
   "ModDescription": "Makes the opening alternate if you wait on the main menu for it to be replayed",
   "ModDll": "p4g64.alternatingOpenings.dll",
   "ModIcon": "Preview.png",
